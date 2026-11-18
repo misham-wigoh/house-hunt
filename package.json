@@ -1,8 +1,8 @@
 {
-  "name": "99acres-clone",
+  "name": "house-hunt",
   "version": "1.0.0",
   "private": true,
-  "description": "99acres.com - India's No.1 Property Portal Standalone Next.js Website",
+  "description": "House Hunt .com - a headless Next.js real estate portal powered by WordPress",
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",

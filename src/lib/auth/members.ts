@@ -9,7 +9,7 @@ export interface MemberRecord {
   created?: boolean;
 }
 
-/** Calls the "99acres Property Submissions" plugin, which keeps members as a private WordPress post type. */
+/** Calls the WordPress submissions plugin (`acres-submit`), which keeps members as a private post type. */
 async function call<T>(path: string, body: Record<string, unknown>): Promise<T> {
   const graphql = process.env.WORDPRESS_GRAPHQL_URL;
   const secret = process.env.WORDPRESS_SUBMIT_SECRET;

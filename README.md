@@ -1,93 +1,117 @@
-# 99acres.com — Standalone Real Estate Portal
+# House Hunt
 
-A high-performance, pixel-perfect clone of **[99acres.com](https://www.99acres.com/)** (India's No. 1 Property Portal), built with Next.js 16, React 19, Tailwind CSS v4, and TypeScript.
+House Hunt is a real estate portal for buying, renting and selling property in India. It is a headless site: the pages are built with Next.js, and all content (listings, projects, builders, cities, blog posts) lives in WordPress.
 
-## Key Routes & Features
-- **Homepage (`/`):** Hero search with 6 intent tabs (Buy, Rent, New Projects, Commercial, Plots, PG), locality auto-complete, city selector, curated high-rises, locality price trends, commercial properties, top builders, property services, app download banner, and full directory footer.
-- **Properties Search Results (`/properties`):** Live filter sidebar (BHK, Budget, Possession, Verified Only), dynamic sorting, property cards, and instant "Contact Seller" modal.
-- **Post Free Property Ad (`/post-property`):** 4-step wizard for individual owners and builders (Intent, Specs, Pricing/Photos, Contact verification) with instant listing ID generation.
-- **Property Detail View (`/property/[id]`):** Photo gallery, price break-up, interactive Home Loan EMI Calculator with range sliders, amenities checklist, locality landmark distances, and builder enquiry lead form.
+## Features
 
-## Tech Stack
-- **Framework:** Next.js 16 (App Router, React 19, TypeScript strict)
-- **UI Primitives:** shadcn/ui base, Lucide React icons, Tailwind CSS v4
-- **Design Tokens:** 99acres brand blue (`#0078DB`), navy text, emerald verification tags, and amber accents
+- **Home (`/`)**: hero search with a rotating banner, quick links, featured projects, rentals, popular localities, commercial spaces, top builders, property services and a city directory.
+- **Search (`/properties`)**: filters for type, BHK, budget and possession, sorting, listing cards with a shortlist heart, and a "Contact Seller" form.
+- **Property page (`/property/[slug]`)**: photo gallery, price and specification details, amenities, nearby places, floor plan, dealer details, an EMI calculator and enquiry forms.
+- **Projects (`/project/[slug]`)**: project details with an enquiry form.
+- **Blog (`/blog`, `/blog/[slug]`)**: articles managed in WordPress.
+- **Post Property (`/post-property`)**: a 6-step form for owners, brokers and builders. Photos, floor plan, amenities, highlights and nearby places are included. Submissions arrive in WordPress as **Pending Review**.
+- **Login and shortlist**: login with an emailed 6-digit code. Logged-in members can save properties at `/account/shortlist`, and the forms pre-fill their name and email.
+- **Services (`/services/...`)**: home loan, legal verification, property valuation and rent agreement enquiries.
+- **Also**: About, Terms, `sitemap.xml` and `robots.txt`.
 
-## Quick Start
+## Tech stack
 
-### 1. Install Dependencies
+- Next.js 16 (App Router), React 19, TypeScript (strict)
+- Tailwind CSS v4 and Lucide icons
+- WordPress with WPGraphQL, WPGraphQL for ACF, ACF PRO and Custom Post Type UI
+- Brevo (transactional email) for login codes
+
+## Getting started
+
+Requirements: Node.js 20 or newer and a WordPress site set up as described below.
+
 ```bash
 npm install
-```
-*(Note: `node_modules` is already pre-copied and ready to use)*
-
-### 2. Run the Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 3. Build & Verify
-```bash
-npm run check
-# Runs: npm run lint && npm run typecheck && npm run build
+cp .env.example .env.local   # then fill in the values
+npm run dev                  # http://localhost:3000
 ```
 
-### 4. Production Start
-```bash
-npm run build
-npm start
-```
+Other commands:
 
-## Project Structure
+| Command | What it does |
+|---|---|
+| `npm run lint` | Runs ESLint |
+| `npm run typecheck` | Runs the TypeScript checker |
+| `npm run build` | Builds for production |
+| `npm start` | Serves the production build |
+| `npm run check` | Lint, typecheck and build together |
+
+## Environment variables
+
+Keep `.env.local` private. It is git-ignored.
+
+| Variable | Purpose |
+|---|---|
+| `WORDPRESS_GRAPHQL_URL` | Public WPGraphQL endpoint of your WordPress site (no credentials) |
+| `REVALIDATE_SECRET` | Secret WordPress sends to `/api/revalidate` to refresh pages when content changes |
+| `WORDPRESS_SUBMIT_SECRET` | Shared secret between this site and the WordPress submissions plugin |
+| `AUTH_SECRET` | Signs login cookies. Use a long random value: `openssl rand -base64 48` |
+| `AUTH_DEV_MODE` | `true` only on your own computer: the login code is shown on screen instead of emailed. It is ignored on any host except `localhost` |
+| `EMAIL_PROVIDER` | How login codes are emailed: `brevo` (recommended), `resend` or `wordpress` |
+| `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME` | Brevo key and the verified sender shown on the email |
+
+On a live server, set a new `AUTH_SECRET` and leave `AUTH_DEV_MODE` off.
+
+## How it works
+
+**Content.** Pages are server components that read WordPress through GraphQL (`src/lib/cms/`). Results are cached for 5 minutes and refreshed on demand. WordPress can call `POST /api/revalidate` with `{ "secret": "...", "tag": "listings" }`. The tags are `listings`, `projects`, `builders`, `insights`, `banners`, `cities` and `localities`. Leave the tag out to refresh everything.
+
+**Forms.** The Post Property form and the enquiry forms post to this site's own API routes. The server forwards them to a WordPress plugin (`acres-submit`) with the shared secret. The plugin saves:
+- listings as Pending Review, with every answer in its matching ACF field,
+- enquiries in a private Enquiries inbox,
+- members and their shortlists in a private Members list.
+
+Phone numbers, emails and WhatsApp numbers are stored privately and are never exposed through GraphQL or REST.
+
+**Login.** A visitor enters an email and receives a 6-digit code that expires after 5 minutes. A wrong code can be tried 5 times, and there are limits per email and per IP address. After a correct code, the server sets a signed, httpOnly cookie that lasts 30 days. Codes are not stored anywhere (`src/lib/auth/`).
+
+## WordPress setup
+
+The site expects these on the WordPress side:
+
+1. Plugins: WPGraphQL, WPGraphQL for ACF, ACF PRO, Custom Post Type UI and the submissions plugin `acres-submit`.
+2. Post types: property listings, projects, builders, dealers, blog posts, city and locality pages, enquiries and members.
+3. ACF field groups for listings, with taxonomies for city, locality, type, BHK, status, possession, amenities and furnishing.
+4. The same secret in the plugin and in `WORDPRESS_SUBMIT_SECRET`.
+
+## Project structure
+
 ```
 src/
   app/
-    globals.css             # Tailwind v4 tokens & 99acres color scheme
-    layout.tsx              # Root layout & OpenGraph metadata
-    page.tsx                # 99acres Homepage
-    properties/page.tsx     # Property Search & Filter Results (SERP)
-    post-property/page.tsx  # Post Free Property Ad 4-step wizard
-    property/[id]/page.tsx  # Property & Project Detail View with EMI Tool
+    page.tsx                  Home
+    properties/               Search and filters
+    property/[slug]/          Property page
+    project/[slug]/           Project page
+    blog/                     Blog list and article
+    post-property/            6-step Post Property form
+    account/shortlist/        Saved properties
+    services/                 Service enquiry pages
+    about/, terms/            Static pages
+    api/
+      auth/                   Login routes: request-otp, verify-otp, me, logout, profile, shortlist
+      post-property/          Receives the Post Property form
+      enquiry/                Receives enquiry forms
+      revalidate/             Refreshes cached pages from WordPress
+    layout.tsx, globals.css, sitemap.ts, robots.ts
   components/
-    header.tsx              # City dropdown, navigation tabs, mobile menu, login modal
-    hero-search.tsx         # Category tabs, locality autocomplete, filters
-    quick-links.tsx         # Fast shortcut feature cards
-    featured-projects.tsx   # Curated residential developments
-    popular-localities.tsx  # Locality price trends & capital growth metrics
-    commercial-showcase.tsx # Corporate offices, retail spaces & tech parks
-    top-builders.tsx        # India's premier developers (DLF, Godrej, Prestige, Sobha)
-    property-services.tsx   # Home loans, legal checks, valuation, rent agreement
-    market-insights.tsx     # Real estate research articles & trends
-    app-banner.tsx          # Mobile app promotion & QR code
-    city-directory.tsx      # Pan-India 12-city network
-    footer.tsx              # Multi-column directory & Info Edge network
-    icons.tsx               # 99acres logo & RERA badges
-    ui/                     # shadcn/ui primitives
+    auth/                     Login box and login state
+    sites/house-hunt/         Header, footer, hero search, cards and page sections
   lib/
-    utils.ts                # cn() class utility
-public/
-  logos/                    # 99acres official brand mark
-  images/                   # 15 high-res architectural images
-docs/
-  brief.md                  # Complete design and technical specification
+    cms/                      WordPress client, queries, mappers, types, form submission
+    auth/                     Codes, cookies, email sending, member calls
+    enquiry.ts                Enquiry form helper
+    post-property-options.ts  Choices used by the Post Property form
 ```
 
-## Brand Design Tokens
-- **Brand Blue:** `#0078DB`
-- **Brand Blue Hover:** `#0060AE`
-- **Dark Navy:** `#151C21`
-- **Page Background:** `#F4F5F7`
-- **Verified Green:** `#008459`
-- **Accent Orange:** `#F95C19`
+## Security notes
 
-## Content (headless WordPress)
-
-All listings, projects, builders, localities, cities, insights and hero banners come from WordPress through WPGraphQL. Nothing is hard-coded in `src/`.
-
-- Copy `.env.example` to `.env.local` and fill it in. `WORDPRESS_GRAPHQL_URL` is the public endpoint (no credentials). The other values are secrets: keep them out of git and out of chat.
-- The data layer is in `src/lib/cms/` (`client.ts`, `queries.ts`, `mappers.ts`, `data.ts`). Pages are server components with 5-minute ISR.
-- To refresh on publish, have WordPress POST `{ "secret": "...", "tag": "listings" }` to `/api/revalidate` (tags: `listings`, `projects`, `builders`, `insights`, `banners`, `cities`, `localities`, or omit for all).
-- The content model (ACF field groups) is imported from `wordpress/import/acf-property-details.json`.
-- The WordPress plugin `wordpress/acres-submit` receives the Post Property form, the enquiry forms and member login. Listings arrive as Pending Review, and contact details stay private in WordPress. Its shared secret lives in `wordpress/acres-submit/secret.php` (git-ignored) and must equal `WORDPRESS_SUBMIT_SECRET`.
-- Login is by emailed 6-digit code (`src/lib/auth/`). Codes are sent through Brevo (`EMAIL_PROVIDER=brevo`, `BREVO_API_KEY`, `EMAIL_FROM`). Set `AUTH_SECRET`; use `AUTH_DEV_MODE=true` on localhost only, where the code is shown on screen instead of emailed.
+- Secrets live only in `.env.local` and on the server. Never commit them or paste them into chat.
+- The login cookie is httpOnly, and requests from other sites are rejected.
+- Submitted listings are never public until staff publish them in WordPress.
+- Form pages include a hidden anti-spam field and per-IP limits.

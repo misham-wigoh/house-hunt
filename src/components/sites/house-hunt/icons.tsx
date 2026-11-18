@@ -1,5 +1,5 @@
 
-export function AcresLogo({ className = "h-9", light = false }: { className?: string; light?: boolean }) {
+export function HouseHuntLogo({ className = "h-9", light = false }: { className?: string; light?: boolean }) {
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`} aria-label="HouseHunt.com">
       {/* House Hunt Architectural Emblem */}

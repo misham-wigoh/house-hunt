@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { X, ShieldCheck, Loader2 } from "lucide-react";
-import { AcresLogo } from "@/components/sites/house-hunt/icons";
+import { HouseHuntLogo } from "@/components/sites/house-hunt/icons";
 
 type Step = "email" | "code" | "name";
 
@@ -146,7 +146,7 @@ export function LoginModal({ onClose, onDone }: Props) {
         </button>
 
         <div className="mb-6">
-          <AcresLogo light={false} className="h-8 mb-4" />
+          <HouseHuntLogo light={false} className="h-8 mb-4" />
           <h3 id="login-title" className="text-xl font-bold text-[#262626] tracking-tight">
             {title}
           </h3>

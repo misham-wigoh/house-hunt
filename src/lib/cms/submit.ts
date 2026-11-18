@@ -16,7 +16,7 @@ import {
 
 /**
  * Sends a property submitted through the public "Post Property" form to the
- * "99acres Property Submissions" WordPress plugin, which creates a PENDING REVIEW
+ * WordPress submissions plugin (`acres-submit`), which creates a PENDING REVIEW
  * listing (never public until staff publish it) and stores every answer in the
  * matching ACF field. The owner's contact details are stored as private fields that
  * REST and GraphQL never expose.

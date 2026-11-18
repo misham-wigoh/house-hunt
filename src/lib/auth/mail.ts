@@ -7,7 +7,7 @@ import { AuthError } from "./config";
  * - Local dev mode (AUTH_DEV_MODE=true on localhost): nothing is sent; the code is printed in the
  *   server terminal and shown in the login box.
  * - EMAIL_PROVIDER=wordpress (default): sent through your WordPress site's mail (wp_mail) by the
- *   "99acres Property Submissions" plugin. Free, and nothing extra to sign up for.
+ *   submissions plugin (`acres-submit`). Free, and nothing extra to sign up for.
  * - EMAIL_PROVIDER=brevo: sent through Brevo's transactional email API (free tier). Needs BREVO_API_KEY
  *   and EMAIL_FROM, which must be a sender address (or domain) you have verified in Brevo.
  * - EMAIL_PROVIDER=resend: sent through Resend (needs RESEND_API_KEY and EMAIL_FROM on a domain

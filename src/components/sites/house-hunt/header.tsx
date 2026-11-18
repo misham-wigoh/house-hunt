@@ -18,7 +18,7 @@ import {
   Calculator,
   ArrowRight,
 } from "lucide-react";
-import { AcresLogo } from "./icons";
+import { HouseHuntLogo } from "./icons";
 import { useCmsCities } from "./cms-context";
 import { useAuth } from "@/components/auth/auth-context";
 
@@ -70,7 +70,7 @@ export function Header({ currentCity }: { currentCity?: string }) {
           {/* Left: Brand Identity & Glass City Capsule */}
           <div className="flex items-center gap-2 sm:gap-5 shrink-0">
             <Link href="/" className="shrink-0 flex items-center group">
-              <AcresLogo light={false} className="h-8 sm:h-9 transition-transform group-hover:scale-[1.02]" />
+              <HouseHuntLogo light={false} className="h-8 sm:h-9 transition-transform group-hover:scale-[1.02]" />
             </Link>
 
             {/* Glass City Selector Pill */}

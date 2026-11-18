@@ -1,6 +1,6 @@
 /**
- * GraphQL documents. Field names come from the 99acres CMS plugin
- * (`graphql_field_name` / `graphql_single_name` in wordpress/acres-cms).
+ * GraphQL documents. Field names come from the House Hunt content model in WordPress
+ * (ACF field groups and CPT UI post types, exposed through WPGraphQL).
  * Contact phone, email, WhatsApp and commission are intentionally NOT exposed
  * by WordPress, so they cannot be queried here.
  */

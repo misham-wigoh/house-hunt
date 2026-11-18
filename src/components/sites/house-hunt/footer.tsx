@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { AcresLogo } from "./icons";
+import { HouseHuntLogo } from "./icons";
 import { Phone, Mail, ShieldCheck } from "lucide-react";
 
 const METRO_LINKS = [
@@ -65,7 +65,7 @@ export function Footer() {
               className="inline-flex items-center shrink-0 hover:opacity-90 transition-opacity"
               aria-label="House Hunt Home"
             >
-              <AcresLogo light={true} className="h-9 sm:h-10" />
+              <HouseHuntLogo light={true} className="h-9 sm:h-10" />
             </Link>
             <div className="border-l border-white/20 pl-4 sm:pl-5">
               <h2 className="text-sm font-medium text-white tracking-tight leading-tight">
