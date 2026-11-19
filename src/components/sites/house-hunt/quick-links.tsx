@@ -21,7 +21,7 @@ const QUICK_SERVICES = [
     title: "Handpicked Projects",
     desc: "100% RERA Registered",
     icon: Sparkles,
-    href: "/properties?type=project",
+    href: "/projects",
     badge: "Trending",
     iconColor: "text-[#008ae8] bg-[#e0f2fe] border-[#008ae8]/20",
   },

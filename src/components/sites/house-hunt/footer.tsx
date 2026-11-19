@@ -18,7 +18,7 @@ const RESIDENTIAL_SEARCHES = [
   { label: "House for Rent in Bangalore", href: "/properties?intent=rent&city=bangalore" },
   { label: "Villas for Sale in Hyderabad", href: "/properties?intent=buy&type=villa" },
   { label: "Furnished Flats in Pune", href: "/properties?intent=rent&city=pune" },
-  { label: "New Builder Projects", href: "/properties?type=project" },
+  { label: "New Builder Projects", href: "/projects" },
 ];
 
 const COMMERCIAL_LINKS = [

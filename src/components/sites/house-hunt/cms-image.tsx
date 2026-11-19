@@ -6,15 +6,34 @@ interface CmsImageProps {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  loading?: "lazy" | "eager";
 }
 
 /**
  * Fills its (relatively positioned) parent with a WordPress media-library
  * image, or a neutral block when the CMS record has no image yet.
  */
-export function CmsImage({ src, alt, className, sizes = "(min-width: 1024px) 33vw, 100vw", priority }: CmsImageProps) {
+export function CmsImage({
+  src,
+  alt,
+  className,
+  sizes = "(min-width: 1024px) 33vw, 100vw",
+  priority,
+  loading,
+}: CmsImageProps) {
   if (!src) {
     return <div className="absolute inset-0 bg-[#fafafa]" role="img" aria-label={alt} />;
   }
-  return <Image src={src} alt={alt} fill sizes={sizes} className={className} priority={priority} />;
+  const resolvedLoading = loading ?? (priority ? "eager" : undefined);
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      className={className}
+      priority={priority}
+      loading={resolvedLoading}
+    />
+  );
 }

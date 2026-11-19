@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +19,8 @@ import {
   Play,
   ArrowRight,
 } from "lucide-react";
+import { useLocation, usePrioritized } from "@/components/location/location-context";
+import { isLocalCity } from "@/lib/location/resolve";
 import type { HeroBanner, SearchOptions } from "@/lib/cms/types";
 
 const SEARCH_TABS = [
@@ -40,6 +42,8 @@ const BUDGET_OPTIONS = [
 ];
 
 const SLIDE_DURATION_MS = 10000;
+/** With a banner set per city the list gets long; keep the slider and thumbnail rail to a handful. */
+const MAX_HERO_SLIDES = 8;
 
 export function HeroSearch({
   slides,
@@ -48,9 +52,16 @@ export function HeroSearch({
   slides: HeroBanner[];
   searchOptions: SearchOptions;
 }) {
-  const HERO_SLIDES = slides;
+  // Banners and locality suggestions from the visitor's city come first.
+  const { location } = useLocation();
+  const prioritizedSlides = usePrioritized(slides, "city");
+  // Every banner from the visitor's own city is kept (even above the cap); other cities fill the rest.
+  const HERO_SLIDES = useMemo(() => {
+    const localCount = prioritizedSlides.filter((s) => isLocalCity(location, s.city)).length;
+    return prioritizedSlides.slice(0, Math.max(MAX_HERO_SLIDES, localCount));
+  }, [prioritizedSlides, location]);
   const PROPERTY_TYPES = searchOptions.propertyTypes;
-  const LOCALITY_SUGGESTIONS = searchOptions.localities;
+  const LOCALITY_SUGGESTIONS = usePrioritized(searchOptions.localities, "city");
   const router = useRouter();
 
   // Slider State
@@ -166,6 +177,7 @@ export function HeroSearch({
       <div className="absolute inset-0 z-0 overflow-hidden bg-[#1c1c1e]">
         {HERO_SLIDES.map((slide, index) => {
           const isCurrent = index === currentSlide;
+          const isEager = index === 0 || isCurrent;
           return (
             <div
               key={slide.id}
@@ -181,7 +193,8 @@ export function HeroSearch({
                   src={slide.image}
                   alt={slide.title}
                   fill
-                  priority={index === 0}
+                  priority={isEager}
+                  loading={isEager ? "eager" : "lazy"}
                   className="object-cover object-center"
                   sizes="100vw"
                 />

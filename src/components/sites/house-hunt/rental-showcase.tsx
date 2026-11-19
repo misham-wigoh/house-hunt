@@ -13,9 +13,10 @@ import {
 import { CmsImage } from "./cms-image";
 import { EnquiryHoneypot } from "./enquiry-honeypot";
 import { sendEnquiry } from "@/lib/enquiry";
+import { useLocalFirst } from "@/components/location/location-context";
 import type { Listing } from "@/lib/cms/types";
 
-export function RentalShowcase({ listings }: { listings: Listing[] }) {
+export function RentalShowcase({ listings, pool = listings }: { listings: Listing[]; pool?: Listing[] }) {
   const [selectedRental, setSelectedRental] = useState<Listing | null>(null);
   const [phone, setPhone] = useState("");
   const [enquirySuccess, setEnquirySuccess] = useState(false);
@@ -47,7 +48,7 @@ export function RentalShowcase({ listings }: { listings: Listing[] }) {
     }, 2500);
   };
 
-  const displayListings = (listings || []).slice(0, 4);
+  const displayListings = useLocalFirst(listings, pool, "city", 4);
 
   return (
     <section id="rental-homes" data-ui="rental-showcase" className="py-10 sm:py-12 bg-white border-b border-[#aeaeaf]/40">
@@ -77,7 +78,7 @@ export function RentalShowcase({ listings }: { listings: Listing[] }) {
 
         {/* 4-Card Rental Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {displayListings.map((item) => (
+          {displayListings.map((item, idx) => (
             <article
               key={item.id}
               data-ui="rental-card"
@@ -86,6 +87,8 @@ export function RentalShowcase({ listings }: { listings: Listing[] }) {
               <CmsImage
                 src={item.image}
                 alt={item.title}
+                priority={idx < 2}
+                loading={idx < 2 ? "eager" : "lazy"}
                 sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />

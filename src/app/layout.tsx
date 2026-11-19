@@ -3,6 +3,7 @@ import "./globals.css";
 import { getCities } from "@/lib/cms/data";
 import { CmsProvider } from "@/components/sites/house-hunt/cms-context";
 import { AuthProvider } from "@/components/auth/auth-context";
+import { LocationProvider } from "@/components/location/location-context";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://househunt.com";
 
@@ -134,6 +135,7 @@ export default async function RootLayout({
         {/* Performance Preconnect & DNS-Prefetch */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://antiquewhite-turtle-463103.hostingersite.com" />
         <link rel="dns-prefetch" href="https://antiquewhite-turtle-463103.hostingersite.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-white text-[#262626]">
@@ -143,7 +145,9 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <CmsProvider cities={cities}>
-          <AuthProvider>{children}</AuthProvider>
+          <LocationProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </LocationProvider>
         </CmsProvider>
       </body>
     </html>

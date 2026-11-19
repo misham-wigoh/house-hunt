@@ -48,6 +48,11 @@ export function formatArticleDate(iso: string): string {
   });
 }
 
+/** Safe String.fromCodePoint: returns `fallback` for values that are not valid code points. */
+function codePointToString(code: number, fallback: string): string {
+  return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : fallback;
+}
+
 /** "<p>Hello &amp; bye</p>" -> ["Hello & bye"]. Strips markup instead of injecting HTML. */
 export function htmlToParagraphs(html: string | null | undefined): string[] {
   if (!html) return [];
@@ -64,6 +69,9 @@ export function htmlToParagraphs(html: string | null | undefined): string[] {
         .replace(/&#039;|&#8217;/g, "'")
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
+        // WordPress turns "24x7" into "24&#215;7" and quotes/dashes into numeric entities.
+        .replace(/&#(\d+);/g, (m, n: string) => codePointToString(Number(n), m))
+        .replace(/&#x([0-9a-f]+);/gi, (m, h: string) => codePointToString(parseInt(h, 16), m))
         .trim(),
     )
     .filter(Boolean);

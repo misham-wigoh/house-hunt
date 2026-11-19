@@ -10,6 +10,8 @@ import { VerifiedBadge, PriceDropBadge, ReraBadge } from "@/components/sites/hou
 import { CmsImage } from "@/components/sites/house-hunt/cms-image";
 import { EnquiryHoneypot } from "@/components/sites/house-hunt/enquiry-honeypot";
 import { sendEnquiry } from "@/lib/enquiry";
+import { useLocation } from "@/components/location/location-context";
+import { isLocalCity } from "@/lib/location/resolve";
 import type { Listing } from "@/lib/cms/types";
 import {
   MapPin,
@@ -54,6 +56,7 @@ function PropertiesContent({ listings }: { listings: Listing[] }) {
   const cityParam = searchParams.get("city") || "";
   const tabParam = searchParams.get("tab") || "";
   const budgetParam = searchParams.get("budget") || "";
+  const { location } = useLocation();
 
   const typeOptions = useMemo(() => {
     const present = Array.from(new Set(listings.map((l) => l.type).filter(Boolean)));
@@ -185,9 +188,15 @@ function PropertiesContent({ listings }: { listings: Listing[] }) {
     }).sort((a, b) => {
       if (sortBy === "price-low") return a.priceNum - b.priceNum;
       if (sortBy === "price-high") return b.priceNum - a.priceNum;
-      return 0;
+      // Relevance: the visitor's own city first (the sort is stable, so the rest keep their order).
+      return Number(isLocalCity(location, b.city)) - Number(isLocalCity(location, a.city));
     });
-  }, [listings, qParam, selectedCity, tabParam, selectedType, selectedBhk, verifiedOnly, selectedPossession, budgetParam, sortBy]);
+  }, [listings, qParam, selectedCity, tabParam, selectedType, selectedBhk, verifiedOnly, selectedPossession, budgetParam, sortBy, location]);
+
+  const localFirstLabel =
+    sortBy === "relevance" && selectedCity === "All Cities" && listings.some((l) => isLocalCity(location, l.city))
+      ? location?.label
+      : null;
 
   return (
     <div className="min-h-dvh bg-[#fafafa] flex flex-col font-sans text-[#262626] selection:bg-[#008ae8] selection:text-white">
@@ -205,6 +214,9 @@ function PropertiesContent({ listings }: { listings: Listing[] }) {
             {selectedCity !== "All Cities" && <span className="text-[#008ae8] font-medium">• {selectedCity}</span>}
           </div>
           <span className="text-[#757577] font-medium hidden sm:inline">
+            {localFirstLabel && (
+              <span className="text-[#008ae8]">{localFirstLabel} properties first · </span>
+            )}
             {listings.length} Verified Listings
           </span>
         </div>

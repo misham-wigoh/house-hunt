@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, MapPin, Briefcase } from "lucide-react";
 import { CmsImage } from "./cms-image";
+import { useLocalFirst } from "@/components/location/location-context";
 import type { Listing } from "@/lib/cms/types";
 
-export function CommercialShowcase({ listings }: { listings: Listing[] }) {
+export function CommercialShowcase({ listings, pool = listings }: { listings: Listing[]; pool?: Listing[] }) {
+  const shownListings = useLocalFirst(listings, pool, "city", 3);
   return (
     <section data-ui="commercial-showcase" className="py-12 bg-[#262626] text-white">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
@@ -30,7 +34,7 @@ export function CommercialShowcase({ listings }: { listings: Listing[] }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {listings.map((comm) => (
+          {shownListings.map((comm) => (
             <div
               key={comm.id}
               data-ui="commercial-card"

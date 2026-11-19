@@ -4,20 +4,32 @@ import { useState } from "react";
 import Link from "next/link";
 import { TrendingUp, ArrowUpRight } from "lucide-react";
 import { CmsImage } from "./cms-image";
+import { useLocation, usePrioritized } from "@/components/location/location-context";
+import { isLocalCity } from "@/lib/location/resolve";
 import type { LocalityItem } from "@/lib/cms/types";
 
-export function PopularLocalities({ localities }: { localities: LocalityItem[] }) {
-  const [activeFilter, setActiveFilter] = useState("All Cities");
+const hasListings = (loc: LocalityItem) => {
+  const str = (loc.totalListings || "").toLowerCase().trim();
+  return !str.startsWith("0 ") && str !== "0";
+};
+
+export function PopularLocalities({ localities: allLocalities }: { localities: LocalityItem[] }) {
+  const { location } = useLocation();
+  // The visitor's city comes first, in the cards and in the filter pills.
+  const localities = usePrioritized(allLocalities, "city");
+  const [pickedFilter, setPickedFilter] = useState<string | null>(null);
   const cityFilters = ["All Cities", ...Array.from(new Set(localities.map((l) => l.city).filter(Boolean)))];
+
+  // Until the visitor picks a pill, open on their own city when it is a single city (not a multi-city market like NCR).
+  const localCities = Array.from(new Set(localities.filter((l) => hasListings(l) && isLocalCity(location, l.city)).map((l) => l.city)));
+  const activeFilter = pickedFilter ?? (localCities.length === 1 ? localCities[0] : "All Cities");
+  const setActiveFilter = setPickedFilter;
 
   const filteredLocalities = (
     activeFilter === "All Cities"
       ? localities
       : localities.filter((l) => l.city.toLowerCase() === activeFilter.toLowerCase())
-  ).filter((loc) => {
-    const str = (loc.totalListings || "").toLowerCase().trim();
-    return !str.startsWith("0 ") && str !== "0";
-  });
+  ).filter(hasListings);
 
   return (
     <section data-ui="popular-localities" className="py-12 bg-[#fafafa] border-b border-[#aeaeaf]/40">

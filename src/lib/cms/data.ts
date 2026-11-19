@@ -81,8 +81,8 @@ export async function getFeaturedCommercialListings(limit = 3): Promise<Listing[
   return (flagged.length ? flagged : commercial).slice(0, limit);
 }
 
-export async function getFeaturedRentalListings(limit = 4): Promise<Listing[]> {
-  const all = await getListings();
+/** Every rental, residential and co-living ones first when there are enough of them. */
+function rentalPool(all: Listing[], limit: number): Listing[] {
   const rentals = all.filter(
     (l) =>
       l.listingType === "rent" ||
@@ -94,21 +94,44 @@ export async function getFeaturedRentalListings(limit = 4): Promise<Listing[]> {
   );
   // Prefer residential & co-living rentals over commercial leases
   const residentialRentals = rentals.filter((l) => l.type !== "Commercial");
-  const pool = residentialRentals.length >= limit ? residentialRentals : rentals;
+  return residentialRentals.length >= limit ? residentialRentals : rentals;
+}
+
+export async function getFeaturedRentalListings(limit = 4): Promise<Listing[]> {
+  const pool = rentalPool(await getListings(), limit);
   const flagged = pool.filter((l) => l.featuredOnHome);
   return (flagged.length ? flagged : pool).slice(0, limit);
 }
 
+/** All rentals the home page may show; the visitor's city is picked from these. */
+export async function getRentalListingPool(limit = 4): Promise<Listing[]> {
+  return rentalPool(await getListings(), limit);
+}
+
+/** All commercial listings; the visitor's city is picked from these. */
+export async function getCommercialListingPool(): Promise<Listing[]> {
+  return (await getListings()).filter((l) => l.type === "Commercial");
+}
+
 /* ---------- projects ---------- */
 
-export async function getFeaturedProjects(): Promise<ProjectItem[]> {
+async function getOrderedProjects(): Promise<RawProject[]> {
   const raw = await cmsFetchAll<RawProject>(PROJECTS_QUERY, "propertyProjects", {
     tags: ["projects"],
   });
   // Projects have no display-order field yet, so keep creation order (oldest first).
-  const ordered = [...raw].sort((a, b) => (a.databaseId ?? 0) - (b.databaseId ?? 0));
+  return [...raw].sort((a, b) => (a.databaseId ?? 0) - (b.databaseId ?? 0));
+}
+
+export async function getFeaturedProjects(): Promise<ProjectItem[]> {
+  const ordered = await getOrderedProjects();
   const featured = ordered.filter((p) => p.projectInfo?.featuredOnHome);
   return (featured.length ? featured : ordered).map(mapProject);
+}
+
+/** Every project, so the home page can pull in the visitor's city. */
+export async function getAllProjects(): Promise<ProjectItem[]> {
+  return (await getOrderedProjects()).map(mapProject);
 }
 
 export async function getProjectBySlug(slug: string): Promise<ProjectItem | null> {

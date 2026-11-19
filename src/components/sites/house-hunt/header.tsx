@@ -21,6 +21,7 @@ import {
 import { HouseHuntLogo } from "./icons";
 import { useCmsCities } from "./cms-context";
 import { useAuth } from "@/components/auth/auth-context";
+import { useLocation } from "@/components/location/location-context";
 
 const DEFAULT_CITIES = [
   { id: "delhi-ncr", name: "Delhi / NCR", tag: "DL" },
@@ -31,7 +32,7 @@ const DEFAULT_CITIES = [
   { id: "chennai", name: "Chennai", tag: "MAA" },
 ];
 
-export function Header({ currentCity }: { currentCity?: string }) {
+export function Header() {
   const cmsCities = useCmsCities();
   const cmsHeaderCities = (Array.isArray(cmsCities) ? cmsCities : [])
     .filter((c) => c && c.showInHeader)
@@ -39,7 +40,12 @@ export function Header({ currentCity }: { currentCity?: string }) {
 
   const CITIES = cmsHeaderCities.length > 0 ? cmsHeaderCities : DEFAULT_CITIES;
 
-  const [selectedCity, setSelectedCity] = useState(currentCity ?? CITIES[0]?.name ?? "Delhi / NCR");
+  // Where the visitor is: detected from their IP, or the city they picked here.
+  const { location, selectCity, resetToDetected } = useLocation();
+  const selectedCity = location?.label ?? "";
+  // Detected somewhere that isn't in the list (e.g. "Kerala"): show it as the current pick.
+  const detectedExtra =
+    location && location.source === "auto" && !CITIES.some((c) => c.name === location.label) ? location.label : null;
   const [cityOpen, setCityOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -86,7 +92,12 @@ export function Header({ currentCity }: { currentCity?: string }) {
                 aria-expanded={cityOpen}
               >
                 <MapPin className="w-3.5 h-3.5 text-[#008ae8] shrink-0" />
-                <span className="max-w-[70px] xs:max-w-[85px] sm:max-w-[130px] truncate">{selectedCity}</span>
+                {location ? (
+                  <span className="max-w-[70px] xs:max-w-[85px] sm:max-w-[130px] truncate">{selectedCity}</span>
+                ) : (
+                  // Still working out where the visitor is: hold the pill's width so nothing jumps.
+                  <span aria-label="Detecting your location" className="inline-block h-3 w-14 sm:w-20 rounded bg-[#aeaeaf]/30 animate-pulse" />
+                )}
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-[#757577] transition-transform duration-200 shrink-0 ${
                     cityOpen ? "rotate-180 text-[#008ae8]" : ""
@@ -105,12 +116,18 @@ export function Header({ currentCity }: { currentCity?: string }) {
                     <span className="text-[10px] text-[#757577]">{CITIES.length} available</span>
                   </div>
                   <div className="max-h-72 overflow-y-auto py-1 space-y-0.5">
+                    {detectedExtra && (
+                      <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl flex items-center justify-between bg-[#e0f2fe] text-[#008ae8] font-semibold border border-[#008ae8]/30">
+                        <span>{detectedExtra}</span>
+                        <span className="text-[10px] font-medium text-[#008ae8]">Your location</span>
+                      </div>
+                    )}
                     {CITIES.map((city) => (
                       <button
                         key={city.id}
                         type="button"
                         onClick={() => {
-                          setSelectedCity(city.name);
+                          selectCity(city);
                           setCityOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-xl flex items-center justify-between transition-colors ${
@@ -126,6 +143,24 @@ export function Header({ currentCity }: { currentCity?: string }) {
                       </button>
                     ))}
                   </div>
+                  {location && location.source !== "auto" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetToDetected();
+                        setCityOpen(false);
+                      }}
+                      className="mt-1 w-full text-left px-3 py-2 text-xs rounded-xl flex items-center gap-1.5 border-t border-[#aeaeaf]/30 text-[#008ae8] font-medium hover:bg-[#e0f2fe] transition-colors"
+                    >
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                      Detect my location
+                    </button>
+                  )}
+                  {location && location.cities.length === 0 && (
+                    <p className="px-3 pt-2 pb-1 text-[11px] leading-snug text-[#757577] border-t border-[#aeaeaf]/30">
+                      No listings in {location.label} yet, so you&apos;re seeing properties from all cities.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -272,7 +307,7 @@ export function Header({ currentCity }: { currentCity?: string }) {
 
             {/* New Projects */}
             <Link
-              href="/properties?type=project"
+              href="/projects"
               className="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-full text-[#262626] hover:text-[#008ae8] hover:bg-[#fafafa] flex items-center gap-1.5 transition-all border border-transparent group"
             >
               <span>Projects</span>

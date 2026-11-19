@@ -12,7 +12,9 @@ import { AppBanner } from "@/components/sites/house-hunt/app-banner";
 import { CityDirectory } from "@/components/sites/house-hunt/city-directory";
 import { Footer } from "@/components/sites/house-hunt/footer";
 import {
+  getAllProjects,
   getCities,
+  getCommercialListingPool,
   getFeaturedBuilders,
   getFeaturedCommercialListings,
   getFeaturedProjects,
@@ -21,23 +23,40 @@ import {
   getInsights,
   getListings,
   getLocalities,
+  getRentalListingPool,
   getSearchOptions,
 } from "@/lib/cms/data";
 
 export default async function Home() {
-  const [banners, searchOptions, projects, rentals, localities, commercial, builders, insights, cities, listings] =
-    await Promise.all([
-      getHeroBanners(),
-      getSearchOptions(),
-      getFeaturedProjects(),
-      getFeaturedRentalListings(4),
-      getLocalities(),
-      getFeaturedCommercialListings(),
-      getFeaturedBuilders(),
-      getInsights(4),
-      getCities(),
-      getListings(),
-    ]);
+  const [
+    banners,
+    searchOptions,
+    projects,
+    rentals,
+    localities,
+    commercial,
+    builders,
+    insights,
+    cities,
+    listings,
+    allProjects,
+    rentalPool,
+    commercialPool,
+  ] = await Promise.all([
+    getHeroBanners(),
+    getSearchOptions(),
+    getFeaturedProjects(),
+    getFeaturedRentalListings(4),
+    getLocalities(),
+    getFeaturedCommercialListings(),
+    getFeaturedBuilders(),
+    getInsights(4),
+    getCities(),
+    getListings(),
+    getAllProjects(),
+    getRentalListingPool(4),
+    getCommercialListingPool(),
+  ]);
 
   return (
     <div className="min-h-dvh bg-white flex flex-col font-sans antialiased text-[#262626] selection:bg-[#008ae8] selection:text-white">
@@ -53,16 +72,16 @@ export default async function Home() {
         <QuickLinks />
 
         {/* Featured Residential Projects & Gated Townships */}
-        <FeaturedProjects projects={projects} />
+        <FeaturedProjects projects={projects} pool={allProjects} />
 
         {/* Verified Homes & Flats for Rent */}
-        <RentalShowcase listings={rentals} />
+        <RentalShowcase listings={rentals} pool={rentalPool} />
 
         {/* Locality Insights & Capital Appreciation Rates */}
         <PopularLocalities localities={localities} />
 
         {/* Commercial Real Estate, Offices & Retail */}
-        <CommercialShowcase listings={commercial} />
+        <CommercialShowcase listings={commercial} pool={commercialPool} />
 
         {/* Top Reputed Builders & Developers in India */}
         <TopBuilders builders={builders} />

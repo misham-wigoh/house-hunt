@@ -15,9 +15,11 @@ import {
 import { CmsImage } from "./cms-image";
 import { EnquiryHoneypot } from "./enquiry-honeypot";
 import { sendEnquiry } from "@/lib/enquiry";
+import { useLocalFirst } from "@/components/location/location-context";
 import type { ProjectItem } from "@/lib/cms/types";
 
-export function FeaturedProjects({ projects }: { projects: ProjectItem[] }) {
+export function FeaturedProjects({ projects, pool = projects }: { projects: ProjectItem[]; pool?: ProjectItem[] }) {
+  const shownProjects = useLocalFirst(projects, pool, "city", 4);
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [phone, setPhone] = useState("");
   const [enquirySuccess, setEnquirySuccess] = useState(false);
@@ -67,7 +69,7 @@ export function FeaturedProjects({ projects }: { projects: ProjectItem[] }) {
             </p>
           </div>
           <Link
-            href="/properties?type=project"
+            href="/projects"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#008ae8] hover:text-[#0077c8] self-start sm:self-auto group"
           >
             <span>View All Projects</span>
@@ -77,7 +79,7 @@ export function FeaturedProjects({ projects }: { projects: ProjectItem[] }) {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {projects.slice(0, 4).map((proj) => (
+          {shownProjects.map((proj, idx) => (
             <article
               key={proj.id}
               data-ui="project-card"
@@ -86,6 +88,8 @@ export function FeaturedProjects({ projects }: { projects: ProjectItem[] }) {
               <CmsImage
                 src={proj.image}
                 alt={proj.name}
+                priority={idx < 2}
+                loading={idx < 2 ? "eager" : "lazy"}
                 sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />

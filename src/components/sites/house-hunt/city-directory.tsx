@@ -18,6 +18,8 @@ import { CmsImage } from "./cms-image";
 import { VerifiedBadge } from "./icons";
 import { EnquiryHoneypot } from "./enquiry-honeypot";
 import { sendEnquiry } from "@/lib/enquiry";
+import { useLocation, usePrioritized } from "@/components/location/location-context";
+import { isLocalCity } from "@/lib/location/resolve";
 import type { CityItem, Listing, ProjectItem } from "@/lib/cms/types";
 
 interface CityDirectoryProps {
@@ -76,24 +78,29 @@ export function CityDirectory({
   }, [directory, listings, projects]);
 
   // Filter out any location/city with 0 properties (don't show cards with 0)
-  const visibleDirectory = useMemo(() => {
+  const nonEmptyDirectory = useMemo(() => {
     return directory.filter((c) => (cityStats[c.id]?.count ?? 0) > 0);
   }, [directory, cityStats]);
 
-  // Default to Lucknow if present in visible directory, else first visible city
+  // The visitor's own city leads the carousel.
+  const visibleDirectory = usePrioritized(nonEmptyDirectory, "name");
+  const { location } = useLocation();
+
+  // Open on the visitor's city; otherwise Lucknow if present, else the first city.
   const defaultCity = useMemo(() => {
     return (
+      visibleDirectory.find((c) => isLocalCity(location, c.name)) ||
       visibleDirectory.find(
         (c) =>
           c.name.toLowerCase() === "lucknow" ||
           c.displayName.toLowerCase().includes("lucknow")
-      ) || visibleDirectory[0]
+      ) ||
+      visibleDirectory[0]
     );
-  }, [visibleDirectory]);
+  }, [visibleDirectory, location]);
 
-  const [selectedCityId, setSelectedCityId] = useState<string>(
-    () => defaultCity?.id ?? ""
-  );
+  // Empty until the visitor clicks a city; selectedCity falls back to defaultCity.
+  const [selectedCityId, setSelectedCityId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"all" | "residential" | "commercial" | "projects">("all");
   const [enquireItem, setEnquireItem] = useState<{ id: string; title: string; location: string; price: string; image: string | null; reference?: string } | null>(null);
   const [phone, setPhone] = useState("");
